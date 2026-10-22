@@ -26,6 +26,8 @@ type Environment struct {
 	JWTRfreshTokenExpiredDays int
 	FormatDateTime            string
 	UserMaxDevice             int
+	ApmUrl                    string
+	ApmNameService            string
 }
 
 func getEnv(key, fallback string) string {
@@ -75,5 +77,7 @@ func LoadEnvironment() *Environment {
 		JWTRfreshTokenExpiredDays: getEnvInt("JWT_REFRESH_TOKEN_EXPIRED_DAYS", 7),
 		FormatDateTime:            getEnv("FORMAT_DATE_TIME", "2006-01-02 15:04:05"),
 		UserMaxDevice:             getEnvInt("USER_MAX_DEVICE", 1),
+		ApmUrl:                    getEnv("APM_URL", "localhost:3000"),
+		ApmNameService:            getEnv("APM_NAME_SERVICE", "template-go-gin"),
 	}
 }
