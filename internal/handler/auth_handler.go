@@ -2,9 +2,9 @@ package handler
 
 import (
 	"net/http"
-	"service_blog_go/internal/config"
-	"service_blog_go/internal/domain"
-	"service_blog_go/pkg/response"
+	"service_go_gin/internal/config"
+	"service_go_gin/internal/domain"
+	"service_go_gin/pkg/response"
 	"time"
 
 	"github.com/gin-gonic/gin"

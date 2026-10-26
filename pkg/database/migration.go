@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"service_blog_go/internal/config"
+	"service_go_gin/internal/config"
 
 	"github.com/golang-migrate/migrate/v4"
 )

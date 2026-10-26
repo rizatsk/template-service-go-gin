@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"log"
-	"service_blog_go/internal/config"
-	"service_blog_go/pkg/response"
-	"service_blog_go/pkg/tokenize"
+	"service_go_gin/internal/config"
+	"service_go_gin/pkg/response"
+	"service_go_gin/pkg/tokenize"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"

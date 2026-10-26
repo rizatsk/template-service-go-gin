@@ -1,7 +1,7 @@
 package seeder
 
 import (
-	"service_blog_go/internal/config"
+	"service_go_gin/internal/config"
 
 	"gorm.io/gorm"
 )

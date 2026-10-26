@@ -1,8 +1,8 @@
 package tokenize
 
 import (
-	"service_blog_go/internal/config"
-	"service_blog_go/internal/domain"
+	"service_go_gin/internal/config"
+	"service_go_gin/internal/domain"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

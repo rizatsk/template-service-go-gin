@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 	"log"
-	"service_blog_go/internal/config"
-	"service_blog_go/internal/domain"
-	"service_blog_go/pkg/asynclock"
-	"service_blog_go/pkg/response"
-	"service_blog_go/pkg/tokenize"
+	"service_go_gin/internal/config"
+	"service_go_gin/internal/domain"
+	"service_go_gin/pkg/asynclock"
+	"service_go_gin/pkg/response"
+	"service_go_gin/pkg/tokenize"
 	"uuid"
 
 	"github.com/gin-gonic/gin"

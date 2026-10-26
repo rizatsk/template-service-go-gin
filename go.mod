@@ -1,4 +1,4 @@
-module service_blog_go
+module service_go_gin
 
 go 1.27.2
 

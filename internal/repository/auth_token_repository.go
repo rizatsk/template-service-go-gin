@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"service_blog_go/internal/domain"
-	"service_blog_go/pkg/time"
+	"service_go_gin/internal/domain"
+	"service_go_gin/pkg/time"
 
 	"gorm.io/gorm"
 )

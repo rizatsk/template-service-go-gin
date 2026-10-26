@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"service_blog_go/internal/config"
-	"service_blog_go/internal/handler"
-	"service_blog_go/internal/handler/middleware"
-	"service_blog_go/internal/repository"
-	"service_blog_go/internal/service"
-	"service_blog_go/pkg/asynclock"
-	"service_blog_go/pkg/database"
+	"service_go_gin/internal/config"
+	"service_go_gin/internal/handler"
+	"service_go_gin/internal/handler/middleware"
+	"service_go_gin/internal/repository"
+	"service_go_gin/internal/service"
+	"service_go_gin/pkg/asynclock"
+	"service_go_gin/pkg/database"
 
 	"github.com/gin-gonic/gin"
 )

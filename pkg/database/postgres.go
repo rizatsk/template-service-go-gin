@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
-	"service_blog_go/internal/config"
+	"service_go_gin/internal/config"
 	"time"
 
 	"gorm.io/driver/postgres"

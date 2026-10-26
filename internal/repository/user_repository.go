@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"service_blog_go/internal/domain"
+	"service_go_gin/internal/domain"
 
 	"gorm.io/gorm"
 )

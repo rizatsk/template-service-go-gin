@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"log"
-	"service_blog_go/internal/config"
-	"service_blog_go/pkg/database"
-	"service_blog_go/pkg/database/seeder"
+	"service_go_gin/internal/config"
+	"service_go_gin/pkg/database"
+	"service_go_gin/pkg/database/seeder"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"

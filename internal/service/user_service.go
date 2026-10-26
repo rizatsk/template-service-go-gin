@@ -1,8 +1,8 @@
 package service
 
 import (
-	"service_blog_go/internal/config"
-	"service_blog_go/internal/domain"
+	"service_go_gin/internal/config"
+	"service_go_gin/internal/domain"
 
 	"github.com/gin-gonic/gin"
 )
