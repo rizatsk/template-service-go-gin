@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 func InitPostgres(environemnt *config.Environment) *gorm.DB {
@@ -20,6 +21,13 @@ func InitPostgres(environemnt *config.Environment) *gorm.DB {
 	db_postgres, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Cannot connect to database Postgres: %v", err)
+	}
+
+	// Tracing query with OpenTelemetry
+	if environemnt.OtelEnabled {
+		if err := db_postgres.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
+			log.Fatalf("Failed register OpenTelemetry plugin GORM: %v", err)
+		}
 	}
 
 	// Connceetion pooling

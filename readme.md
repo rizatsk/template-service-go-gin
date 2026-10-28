@@ -26,6 +26,12 @@ Below is the list of core libraries and third-party packages used in this projec
 * **[JWT](https://github.com/golang-jwt/jwt/v5)** (`github.com/golang-jwt/jwt/v5`) - JWT for token auth
 * **[Validator](https://github.com/go-playground/validator/v10)** (`github.com/go-playground/validator/v10`) - Validator request
 
+### Observability
+* **[OpenTelemetry](https://opentelemetry.io/)** (`go.opentelemetry.io/otel`) - Traces & metrics, exported via OTLP gRPC.
+* **[otelgin](https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin)** - Middleware tracing HTTP request Gin.
+* **[GORM OpenTelemetry](https://github.com/go-gorm/opentelemetry)** (`gorm.io/plugin/opentelemetry`) - Tracing query database.
+* **[SigNoz](https://signoz.io/)** - Backend observability (APM, traces, metrics) for OpenTelemetry data.
+
 ### Code Quality & Security Tools (Dev)
 * **[Snyk](https://snyk.io/)** - Static Application Security Testing (SAST) & dependency vulnerability scanner.
 Check and scan snyk you can run :
@@ -190,5 +196,41 @@ close(errChan)
 
 if len(errChan) > 0 {
     return nil, response.NewAppError(500, "", nil)
+}
+```
+
+## Observability (OpenTelemetry & SigNoz)
+### Run SigNoz (self-hosted, docker)
+```bash
+git clone -b main https://github.com/SigNoz/signoz.git
+cd signoz/deploy/docker
+docker compose up -d
+```
+SigNoz UI: http://localhost:8080, OTLP gRPC receiver: `localhost:4317`
+
+### Configure apps
+Set environment in `.env`
+```bash
+OTEL_ENABLED="true"
+OTEL_EXPORTER_OTLP_ENDPOINT="localhost:4317"   # for SigNoz Cloud: ingest.<region>.signoz.cloud:443
+OTEL_EXPORTER_OTLP_INSECURE="true"             # false for SigNoz Cloud (TLS)
+OTEL_SAMPLER_RATIO="1.0"                       # 0.0 - 1.0, percentage request traced
+```
+Service name in SigNoz is taken from `APP_NAME`, environment from `APP_ENV`.
+
+### What is traced
+* Every HTTP request (`otelgin` middleware)
+* Every query GORM (`gorm.io/plugin/opentelemetry`), as child span of HTTP request when `ctx` is passed to repository (`db.WithContext(ctx)`)
+
+### Custom span in service
+```go
+import "go.opentelemetry.io/otel"
+
+var tracer = otel.Tracer("service_go_gin/internal/service")
+
+func (authService *AuthService) Login(ctx context.Context, req *domain.LoginRequest) (*domain.Login, error) {
+    ctx, span := tracer.Start(ctx, "AuthService.Login")
+    defer span.End()
+    ...
 }
 ```
