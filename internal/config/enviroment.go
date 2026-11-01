@@ -59,9 +59,14 @@ func LoadEnvironment() *Environment {
 		log.Println("Info file .env is not found, used default environment variable")
 	}
 
+	appName := getEnv("OTEL_SERVICE_NAME", getEnv("APP_NAME", "rizat-service-blog"))
+	if appName == "" {
+		appName = "rizat-service-blog"
+	}
+
 	return &Environment{
 		Port:                      getEnv("PORT", "8000"),
-		AppName:                   getEnv("APP_NAME", "rizat-service-blog"),
+		AppName:                   appName,
 		AppEnv:                    getEnv("APP_ENV", "development"),
 		DBPGHost:                  getEnv("DB_PG_HOST", "localhost"),
 		DBPGPort:                  getEnv("DB_PG_PORT", "5432"),

@@ -127,6 +127,17 @@ make migrate-down-step
 make db-seed
 ```
 ## Run Apps
+### OpenTelemetry and SigNoz
+The API exports traces and application logs over OTLP/gRPC. Configure
+`OTEL_EXPORTER_OTLP_ENDPOINT` with the gRPC endpoint reachable from the
+service (for a local SigNoz collector, typically
+`http://localhost:4317`) and set `OTEL_EXPORTER_OTLP_INSECURE=true` when the
+collector does not use TLS. Use the collector hostname instead of `localhost`
+when the service runs in a different container. Set `OTEL_SERVICE_NAME` to the
+service name shown in SigNoz, and configure `OTEL_EXPORTER_OTLP_HEADERS` if
+your collector requires authentication. The Go standard logger and Gin request
+logs are exported as logs and continue to be written to stdout.
+
 ### Running apps
 ```
 make run

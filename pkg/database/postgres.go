@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 func InitPostgres(environemnt *config.Environment) *gorm.DB {
@@ -39,6 +40,11 @@ func InitPostgres(environemnt *config.Environment) *gorm.DB {
 
 	// Max duration age connection (prevent memory issue leak or connection expired)
 	sqlDB.SetConnMaxLifetime(1 * time.Hour)
+
+	// Add OpenTelemetry tracing plugin to instrument all operations
+	if err := db_postgres.Use(tracing.NewPlugin()); err != nil {
+		log.Fatalf("Failed to use OpenTelemetry tracing plugin: %v", err)
+	}
 
 	log.Println("Success connection db Postgres with GORM, and pooling connection")
 	return db_postgres

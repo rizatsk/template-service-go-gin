@@ -108,15 +108,17 @@ func (authService *AuthService) RefreshToken(ctx *gin.Context) (*domain.Login, e
 	authService.syncLock.Lock(dataToken.UserId)
 	defer authService.syncLock.Unlock(dataToken.UserId)
 
+	requestCtx := ctx.Request.Context()
+
 	// Get token by auth id
-	_, err := authService.authRepo.GetAuthTokenById(ctx.Request.Context(), dataToken.AuthId)
+	_, err := authService.authRepo.GetAuthTokenById(requestCtx, dataToken.AuthId)
 	if err != nil {
 		log.Printf("Token is not have in table : %v", err)
 		return nil, response.NewAppError(401, "Token is not valid", nil)
 	}
 
 	// Get data user by user id
-	user, err := authService.userRepo.FindByUserId(ctx.Request.Context(), dataToken.UserId)
+	user, err := authService.userRepo.FindByUserId(requestCtx, dataToken.UserId)
 	if err != nil {
 		log.Printf("Token is not valid email is not fonund in user : %v", err)
 		return nil, response.NewAppError(401, "Token is not valid", nil)
@@ -137,13 +139,13 @@ func (authService *AuthService) RefreshToken(ctx *gin.Context) (*domain.Login, e
 		return nil, response.NewAppError(500, "", nil)
 	}
 
-	if err := authService.db.Transaction(func(tx *gorm.DB) error {
-		if err := authService.authRepo.DeleteTokenById(ctx, tx, dataToken.AuthId); err != nil {
+	if err := authService.db.WithContext(requestCtx).Transaction(func(tx *gorm.DB) error {
+		if err := authService.authRepo.DeleteTokenById(requestCtx, tx, dataToken.AuthId); err != nil {
 			log.Printf("Failed delete token by id : %v", err)
 			return err
 		}
 
-		if err := authService.authRepo.InsertToken(ctx, tx, authTokenId, user.ID); err != nil {
+		if err := authService.authRepo.InsertToken(requestCtx, tx, authTokenId, user.ID); err != nil {
 			log.Printf("Failed create token from table : %v", err)
 			return err
 		}

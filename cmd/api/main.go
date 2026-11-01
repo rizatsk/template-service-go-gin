@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"service_blog_go/internal/config"
@@ -10,13 +11,30 @@ import (
 	"service_blog_go/internal/service"
 	"service_blog_go/pkg/asynclock"
 	"service_blog_go/pkg/database"
+	"service_blog_go/pkg/opentelemetry"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 func main() {
 	env := config.LoadEnvironment()
 	port := env.Port
+
+	// Init Otel
+	ctx := context.Background()
+	shutdown, err := opentelemetry.Init(ctx)
+	if err != nil {
+		log.Fatalf("Failed to initialize tracer: %v", err)
+	}
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if shutdownErr := shutdown(shutdownCtx); shutdownErr != nil {
+			log.Printf("Failed to shut down OpenTelemetry: %v", shutdownErr)
+		}
+	}()
 
 	// connection db postgres
 	db_postgres := database.InitPostgres(env)
@@ -39,7 +57,10 @@ func main() {
 	})
 	authHandler := handler.NewAuthHandler(authService, env)
 
+	gin.DefaultWriter = log.Writer()
+	gin.DefaultErrorWriter = log.Writer()
 	route := gin.Default()
+	route.Use(otelgin.Middleware(env.AppName))
 
 	v1 := route.Group("/api/v1")
 	{
