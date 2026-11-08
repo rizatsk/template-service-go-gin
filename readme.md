@@ -146,3 +146,49 @@ make build
 ```
 ./app
 ```
+
+## Implement Goroutines and Channel
+Dont using Goroutines for CRUD in DB or transaction needed response dependencies
+
+### Example
+``` go
+accountChan := make(chan any)
+profileChan := make(chan any)
+errChan := make(chan error, 2)
+
+var waitGroup sync.WaitGroup
+waitGroup.Add(2)
+
+ctxBackground := context.Background()
+
+go func() {
+    defer waitGroup.Done()
+
+    account, err := userService.accountRepo.GetAccountById(ctxBackground, dataToken.UserId)
+    if err != nil {
+        log.Printf("Failed delete token by id : %v", err)
+        errChan <- errors.New("Failed get account by id")
+    }
+
+    accountChan <- account
+}()
+
+go func() {
+    defer waitGroup.Done()
+
+    profile, err = userService.accountRepo.GetProfileByUserId(ctxBackground, ser.ID)
+    if err != nil {
+        log.Printf("Failed create token from table : %v", err)
+        errChan <- errors.New("Failed get profile by user id")
+    }
+
+    profileChan <- profile
+}()
+
+waitGroup.Wait()
+close(errChan)
+
+if len(errChan) > 0 {
+    return nil, response.NewAppError(500, "", nil)
+}
+```
