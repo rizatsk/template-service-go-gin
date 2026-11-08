@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS rizat_blog.auth_tokens;
+DROP TABLE IF EXISTS service_go_gin.auth_tokens;

@@ -29,13 +29,18 @@ func (authTokenRepo *authTokenRepository) GetAuthTokenByUserId(ctx context.Conte
 	return authToken, nil
 }
 
-func (authTokenRepo *authTokenRepository) InsertToken(ctx context.Context, id string, userId string) error {
+func (authTokenRepo *authTokenRepository) InsertToken(ctx context.Context, tx *gorm.DB, id string, userId string) error {
+	dbConn := authTokenRepo.db.WithContext(ctx)
+	if tx != nil {
+		dbConn = tx
+	}
+
 	newAuthToken := domain.AuthToken{
 		ID:        id,
 		UserId:    userId,
 		CreatedAt: time.TimeNoewFormat(),
 	}
-	if err := authTokenRepo.db.WithContext(ctx).Create(newAuthToken).Error; err != nil {
+	if err := dbConn.Create(newAuthToken).Error; err != nil {
 		return err
 	}
 
@@ -50,8 +55,13 @@ func (authTokenRepo *authTokenRepository) DeleteTokenByIds(ctx context.Context, 
 	return nil
 }
 
-func (authTokenRepo *authTokenRepository) DeleteTokenById(ctx context.Context, id string) error {
-	if err := authTokenRepo.db.WithContext(ctx).Where("id = ?", id).Delete(&domain.AuthToken{}).Error; err != nil {
+func (authTokenRepo *authTokenRepository) DeleteTokenById(ctx context.Context, tx *gorm.DB, id string) error {
+	dbConn := authTokenRepo.db.WithContext(ctx)
+	if tx != nil {
+		dbConn = tx
+	}
+
+	if err := dbConn.Where("id = ?", id).Delete(&domain.AuthToken{}).Error; err != nil {
 		return err
 	}
 

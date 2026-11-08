@@ -2,6 +2,8 @@ package domain
 
 import (
 	"context"
+
+	"gorm.io/gorm"
 )
 
 type AuthToken struct {
@@ -12,12 +14,12 @@ type AuthToken struct {
 
 type AuthTokenRepository interface {
 	GetAuthTokenByUserId(ctx context.Context, userId string) ([]*AuthToken, error)
-	InsertToken(ctx context.Context, id string, userId string) error
+	InsertToken(ctx context.Context, tx *gorm.DB, id string, userId string) error
 	DeleteTokenByIds(ctx context.Context, ids []string) error
-	DeleteTokenById(ctx context.Context, id string) error
+	DeleteTokenById(ctx context.Context, tx *gorm.DB, id string) error
 	GetAuthTokenById(ctx context.Context, authId string) (*AuthToken, error)
 }
 
 func (AuthToken) TableName() string {
-	return "rizat_blog.auth_tokens"
+	return "service_go_gin.auth_tokens"
 }

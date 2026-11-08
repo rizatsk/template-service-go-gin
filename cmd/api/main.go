@@ -30,7 +30,13 @@ func main() {
 	userHandler := handler.NewUserHandler(userService)
 
 	authRepo := repository.NewauthTokenRepository(db_postgres)
-	authService := service.NewAuthService(userRepo, authRepo, env, asyncLock)
+	authService := service.NewAuthService(&service.DependsAuthService{
+		UserRepo: userRepo,
+		AuthRepo: authRepo,
+		Env:      env,
+		SyncLock: asyncLock,
+		DB:       db_postgres,
+	})
 	authHandler := handler.NewAuthHandler(authService, env)
 
 	route := gin.Default()

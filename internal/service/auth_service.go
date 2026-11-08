@@ -2,18 +2,17 @@ package service
 
 import (
 	"context"
-	"errors"
 	"log"
 	"service_blog_go/internal/config"
 	"service_blog_go/internal/domain"
 	"service_blog_go/pkg/asynclock"
 	"service_blog_go/pkg/response"
 	"service_blog_go/pkg/tokenize"
-	"sync"
 	"uuid"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type AuthService struct {
@@ -21,14 +20,24 @@ type AuthService struct {
 	authRepo domain.AuthTokenRepository
 	env      *config.Environment
 	syncLock *asynclock.SyncLock
+	db       *gorm.DB
 }
 
-func NewAuthService(userRepo domain.UserRepository, authRepo domain.AuthTokenRepository, env *config.Environment, syncLock *asynclock.SyncLock) domain.AuthService {
+type DependsAuthService struct {
+	UserRepo domain.UserRepository
+	AuthRepo domain.AuthTokenRepository
+	Env      *config.Environment
+	SyncLock *asynclock.SyncLock
+	DB       *gorm.DB
+}
+
+func NewAuthService(depends *DependsAuthService) domain.AuthService {
 	return &AuthService{
-		userRepo: userRepo,
-		authRepo: authRepo,
-		env:      env,
-		syncLock: syncLock,
+		userRepo: depends.UserRepo,
+		authRepo: depends.AuthRepo,
+		env:      depends.Env,
+		syncLock: depends.SyncLock,
+		db:       depends.DB,
 	}
 }
 
@@ -74,18 +83,14 @@ func (authService *AuthService) Login(ctx context.Context, req *domain.LoginRequ
 			idsTokenOld = append(idsTokenOld, authTokens[i].ID)
 		}
 
-		var errDeleteToken error
-		errDeleteToken = authService.authRepo.DeleteTokenByIds(ctx, idsTokenOld)
-		if errDeleteToken != nil {
-			log.Printf("Failed delete token by id : %v", errDeleteToken)
+		if err := authService.authRepo.DeleteTokenByIds(ctx, idsTokenOld); err != nil {
+			log.Printf("Failed delete token by id : %v", err)
 			return nil, response.NewAppError(500, "", nil)
 		}
 	}
 
-	var errInsertToken error
-	errInsertToken = authService.authRepo.InsertToken(ctx, authTokenId, user.ID)
-	if errInsertToken != nil {
-		log.Printf("Failed create token from table : %v", errInsertToken)
+	if err := authService.authRepo.InsertToken(ctx, nil, authTokenId, user.ID); err != nil {
+		log.Printf("Failed create token from table : %v", err)
 		return nil, response.NewAppError(500, "", nil)
 	}
 
@@ -103,15 +108,17 @@ func (authService *AuthService) RefreshToken(ctx *gin.Context) (*domain.Login, e
 	authService.syncLock.Lock(dataToken.UserId)
 	defer authService.syncLock.Unlock(dataToken.UserId)
 
+	requestCtx := ctx.Request.Context()
+
 	// Get token by auth id
-	_, err := authService.authRepo.GetAuthTokenById(ctx.Request.Context(), dataToken.AuthId)
+	_, err := authService.authRepo.GetAuthTokenById(requestCtx, dataToken.AuthId)
 	if err != nil {
 		log.Printf("Token is not have in table : %v", err)
 		return nil, response.NewAppError(401, "Token is not valid", nil)
 	}
 
 	// Get data user by user id
-	user, err := authService.userRepo.FindByUserId(ctx.Request.Context(), dataToken.UserId)
+	user, err := authService.userRepo.FindByUserId(requestCtx, dataToken.UserId)
 	if err != nil {
 		log.Printf("Token is not valid email is not fonund in user : %v", err)
 		return nil, response.NewAppError(401, "Token is not valid", nil)
@@ -132,43 +139,19 @@ func (authService *AuthService) RefreshToken(ctx *gin.Context) (*domain.Login, e
 		return nil, response.NewAppError(500, "", nil)
 	}
 
-	errChan := make(chan error, 2)
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(2)
-	ctxBackground := context.Background()
-
-	// Delete token in table
-	go func() {
-		defer waitGroup.Done()
-
-		var errDeleteToken error
-		// errDeleteToken = authService.authRepo.DeleteTokenById(ctx, dataToken.AuthId)
-		errDeleteToken = authService.authRepo.DeleteTokenById(ctxBackground, dataToken.AuthId)
-		if errDeleteToken != nil {
-			log.Printf("Failed delete token by id : %v", errDeleteToken)
-			// return nil, response.NewAppError(500, "", nil)
-			errChan <- errors.New("Failed delete token by id")
+	if err := authService.db.WithContext(requestCtx).Transaction(func(tx *gorm.DB) error {
+		if err := authService.authRepo.DeleteTokenById(requestCtx, tx, dataToken.AuthId); err != nil {
+			log.Printf("Failed delete token by id : %v", err)
+			return err
 		}
-	}()
 
-	// Add token in table
-	go func() {
-		defer waitGroup.Done()
-
-		var errInsertToken error
-		// errInsertToken = authService.authRepo.InsertToken(ctx, authTokenId, user.ID)
-		errInsertToken = authService.authRepo.InsertToken(ctxBackground, authTokenId, user.ID)
-		if errInsertToken != nil {
-			log.Printf("Failed create token from table : %v", errInsertToken)
-			// return nil, response.NewAppError(500, "", nil)
-			errChan <- errors.New("Failed create token by id")
+		if err := authService.authRepo.InsertToken(requestCtx, tx, authTokenId, user.ID); err != nil {
+			log.Printf("Failed create token from table : %v", err)
+			return err
 		}
-	}()
 
-	waitGroup.Wait()
-	close(errChan)
-
-	if len(errChan) > 0 {
+		return nil
+	}); err != nil {
 		return nil, response.NewAppError(500, "", nil)
 	}
 

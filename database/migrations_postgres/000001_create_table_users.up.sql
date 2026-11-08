@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS rizat_blog;
+CREATE SCHEMA IF NOT EXISTS service_go_gin;
 
-CREATE TABLE IF NOT EXISTS rizat_blog.users (
+CREATE TABLE IF NOT EXISTS service_go_gin.users (
     id VARCHAR(100) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,

@@ -38,7 +38,7 @@ type UserService interface {
 }
 
 func (User) TableName() string {
-	return "rizat_blog.users"
+	return "service_go_gin.users"
 }
 
 func (user *User) HashPassword(password string) error {
