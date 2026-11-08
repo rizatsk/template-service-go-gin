@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS rizat_blog.users;
+DROP TABLE IF EXISTS service_go_gin.users;

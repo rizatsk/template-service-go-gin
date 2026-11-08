@@ -21,5 +21,5 @@ type AuthTokenRepository interface {
 }
 
 func (AuthToken) TableName() string {
-	return "rizat_blog.auth_tokens"
+	return "service_go_gin.auth_tokens"
 }
